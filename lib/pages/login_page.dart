@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:alumniconnectmca/pages/home_page.dart';
 import 'package:alumniconnectmca/pages/register_page.dart';
 import 'package:alumniconnectmca/services/google_auth_service.dart';
+import 'package:alumniconnectmca/pages/forgot_password.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -93,7 +94,24 @@ class _LoginPageState extends State<LoginPage> {
                         _buildTextField(_emailController, "Email", Icons.email),
                         SizedBox(height: 15),
                         _buildTextField(_passwordController, "Password", Icons.lock, isPassword: true),
-                        SizedBox(height: 20),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => ForgotPasswordPage()));
+                            },
+                            child: Text(
+                              "Forgot Password?",
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: _signInWithEmail,
                           style: ElevatedButton.styleFrom(
