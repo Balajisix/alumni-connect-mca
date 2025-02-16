@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "99609905664",
+    "project_id": "alumni-connect-mca",
+    "storage_bucket": "alumni-connect-mca.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:99609905664:android:9ed49ad581f9673269e6e5",
+        "android_client_info": {
+          "package_name": "com.balaji.alumniconnectmca"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "99609905664-5g786m2u5mr195fsnbqdvq2nk1s3lm2f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.balaji.alumniconnectmca",
+            "certificate_hash": "79ddd398f0d04595380b2534bf8a76fb7eb0969a"
+          }
+        },
+        {
+          "client_id": "99609905664-fgittmmpn2vv220rnj8cvihut2f1gkoe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSOgkenEBcD3peqiSl1Ge2LX1vWe4IvFU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "99609905664-fgittmmpn2vv220rnj8cvihut2f1gkoe.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "99609905664-vq58a8n4sj4j7k7loalrfk9a8eoijm7h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.balaji.alumniconnectmca"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
