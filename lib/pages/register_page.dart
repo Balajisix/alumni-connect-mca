@@ -24,6 +24,7 @@ class _SignupPageState extends State<SignupPage> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String _selectedUserType = "Student";
 
   void _signup(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
@@ -57,6 +58,7 @@ class _SignupPageState extends State<SignupPage> {
           phone: _phoneController.text,
           linkedIn: _linkedInController.text,
           password: hashedPassword,
+          userType: _selectedUserType,
         );
 
         await FirebaseFirestore.instance.collection("users").doc(uid).set(newUser.toMap());
@@ -115,6 +117,37 @@ class _SignupPageState extends State<SignupPage> {
                 _buildTextField(_emailController, "Email", Icons.email, isEmail: true),
                 _buildTextField(_phoneController, "Phone No", Icons.phone, isPhone: true),
                 _buildTextField(_linkedInController, "LinkedIn Profile", Icons.link),
+
+                // UserType
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 15),
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedUserType,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
+                      prefixIcon: Icon(Icons.person_outline, color: Colors.white70),
+                    ),
+                    dropdownColor: Colors.blue.shade900,
+                    style: GoogleFonts.poppins(color: Colors.white),
+                    items: ["Student", "Alumni"]
+                        .map((role) => DropdownMenuItem(
+                      value: role,
+                      child: Text(role, style: GoogleFonts.poppins(color: Colors.white)),
+                    ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedUserType = value!;
+                      });
+                    },
+                  ),
+                ),
+
                 _buildPasswordField(_passwordController, "Password", Icons.lock, true),
                 _buildPasswordField(_confirmPasswordController, "Confirm Password", Icons.lock, false),
 
