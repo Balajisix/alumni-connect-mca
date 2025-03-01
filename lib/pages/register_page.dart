@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:alumniconnectmca/providers/signup_providers.dart';
 import 'package:alumniconnectmca/models/user_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:crypto/crypto.dart';
-import 'dart:convert';
+import 'package:alumniconnectmca/widgets/custom_textfield.dart';
+import 'package:alumniconnectmca/widgets/password_field.dart';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -21,238 +21,212 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _linkedInController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
   String _selectedUserType = "Student";
+
+  void _signUp() {
+    if(_formKey.currentState!.validate()) {
+      print("Signing up...");
+    }
+    else {
+      print("Enter all the fields");
+    }
+  }
 
   void _signup(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
-      try {
-        QuerySnapshot query = await FirebaseFirestore.instance
-            .collection("users")
-            .where("rollNo", isEqualTo: _rollNoController.text)
-            .get();
-
-        if (query.docs.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Roll number already registered!")),
-          );
-          return;
-        }
-
-        String hashedPassword = sha256.convert(utf8.encode(_passwordController.text)).toString();
-
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
+      if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Passwords do not match!")),
         );
+        return;
+      }
 
-        String uid = userCredential.user!.uid;
+      UserModel newUser = UserModel(
+        firstName: _firstNameController.text,
+        lastName: _lastNameController.text,
+        rollNo: _rollNoController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        linkedIn: _linkedInController.text,
+        userType: _selectedUserType,
+        password: _passwordController.text,
+      );
 
-        UserModel newUser = UserModel(
-          firstName: _firstNameController.text,
-          lastName: _lastNameController.text,
-          rollNo: _rollNoController.text,
-          email: _emailController.text,
-          phone: _phoneController.text,
-          linkedIn: _linkedInController.text,
-          password: hashedPassword,
-          userType: _selectedUserType,
-        );
+      String? error = await context.read<SignupProvider>().signUp(newUser, _passwordController.text);
 
-        await FirebaseFirestore.instance.collection("users").doc(uid).set(newUser.toMap());
-
+      if (error == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Signup Successful! Redirecting to login...")),
         );
-
         Future.delayed(Duration(seconds: 2), () {
           Navigator.pop(context);
         });
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${e.toString()}")),
-        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    bool isLoading = context.watch<SignupProvider>().isLoading;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade900, Colors.blue.shade700],
+            colors: [Colors.blue.shade900, Colors.blue.shade400],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-          child: Form(
-            key: _formKey,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 25, vertical: 40),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 30),
-                Hero(
-                  tag: 'logo',
-                  child: Image.asset('assets/sign.gif', height: 110),
-                ),
-                SizedBox(height: 15),
+                Image.asset('assets/register.gif', height: 100),
+                SizedBox(height: 10),
                 Text(
                   "Create Account",
-                  style: GoogleFonts.poppins(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  "Sign up to get started",
-                  style: GoogleFonts.poppins(fontSize: 16, color: Colors.white70),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
                 ),
                 SizedBox(height: 20),
 
-                _buildTextField(_firstNameController, "First Name", Icons.person),
-                _buildTextField(_lastNameController, "Last Name", Icons.person),
-                _buildTextField(_rollNoController, "Roll No", Icons.confirmation_number),
-                _buildTextField(_emailController, "Email", Icons.email, isEmail: true),
-                _buildTextField(_phoneController, "Phone No", Icons.phone, isPhone: true),
-                _buildTextField(_linkedInController, "LinkedIn Profile", Icons.link),
-
-                // UserType
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 15),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedUserType,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide.none,
+                // Glassmorphic Card
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                        offset: Offset(0, 4),
                       ),
-                      prefixIcon: Icon(Icons.person_outline, color: Colors.white70),
-                    ),
-                    dropdownColor: Colors.blue.shade900,
-                    style: GoogleFonts.poppins(color: Colors.white),
-                    items: ["Student", "Alumni"]
-                        .map((role) => DropdownMenuItem(
-                      value: role,
-                      child: Text(role, style: GoogleFonts.poppins(color: Colors.white)),
-                    ))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedUserType = value!;
-                      });
-                    },
+                    ],
                   ),
-                ),
-
-                _buildPasswordField(_passwordController, "Password", Icons.lock, true),
-                _buildPasswordField(_confirmPasswordController, "Confirm Password", Icons.lock, false),
-
-                SizedBox(height: 25),
-                ElevatedButton(
-                  onPressed: () => _signup(context),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 5,
-                    backgroundColor: Colors.white,
-                  ),
-                  child: Text(
-                    "Sign Up",
-                    style: GoogleFonts.poppins(fontSize: 18, color: Colors.blue[900], fontWeight: FontWeight.bold),
-                  ),
-                ),
-
-                SizedBox(height: 20),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: RichText(
-                    text: TextSpan(
-                      text: "Already have an account? ",
-                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    child: Column(
                       children: [
-                        TextSpan(
-                          text: "Login",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
+                        CustomTextField(
+                          controller: _firstNameController,
+                          hintText: "First Name",
+                          icon: Icons.person,
+                          textCapitalization: TextCapitalization.sentences,
+                          borderColor: Colors.blue,
+                        ),
+                        SizedBox(height: 10),
+                        CustomTextField(
+                          controller: _lastNameController,
+                          hintText: "Last Name",
+                          icon: Icons.person,
+                          textCapitalization: TextCapitalization.sentences,
+                          borderColor: Colors.blue,
+                        ),
+                        SizedBox(height: 10),
+                        CustomTextField(
+                          controller: _rollNoController,
+                          hintText: "Roll No",
+                          icon: Icons.numbers,
+                          borderColor: Colors.blue,
+                        ),
+                        SizedBox(height: 10),
+                        CustomTextField(
+                          controller: _emailController,
+                          hintText: "Email",
+                          icon: Icons.email,
+                          keyboardType: TextInputType.emailAddress,
+                          borderColor: Colors.blue,
+                        ),
+                        SizedBox(height: 10),
+                        CustomTextField(
+                          controller: _phoneController,
+                          hintText: "Phone No",
+                          icon: Icons.phone,
+                          keyboardType: TextInputType.phone,
+                          borderColor: Colors.blue,
+                        ),
+                        SizedBox(height: 10),
+                        CustomTextField(
+                          controller: _linkedInController,
+                          hintText: "LinkedIn Profile",
+                          icon: Icons.link,
+                          borderColor: Colors.blue,
+                        ),
+                        SizedBox(height: 10),
+
+                        // Password Fields
+                        PasswordField(controller: _passwordController, hintText: "Password"),
+                        SizedBox(height: 10),
+                        PasswordField(controller: _confirmPasswordController, hintText: "Confirm Password"),
+                        SizedBox(height: 10),
+
+                        // User Type Dropdown
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.blue.shade600),
+                          ),
+                          child: DropdownButtonFormField(
+                            decoration: InputDecoration(border: InputBorder.none),
+                            value: _selectedUserType,
+                            dropdownColor: Colors.white,
+                            style: TextStyle(color: Colors.blue.shade900, fontSize: 16),
+                            items: ["Student", "Alumni"].map((type) {
+                              return DropdownMenuItem(
+                                value: type,
+                                child: Text(type),
+                              );
+                            }).toList(),
+                            onChanged: (value) => setState(() => _selectedUserType = value!),
                           ),
                         ),
+                        SizedBox(height: 20),
+
+                        // Signup Button
+                        ElevatedButton(
+                          onPressed: _signUp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white, // White background
+                            shadowColor: Colors.transparent,
+                            padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(45), // Rounded borders
+                              side: BorderSide(color: Colors.blue), // Optional blue border
+                            ),
+                          ),
+                          child: isLoading
+                              ? CircularProgressIndicator(color: Colors.blue)
+                              : Text(
+                            "Sign Up",
+                            style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            color: Colors.blue.shade900,
+                            fontWeight: FontWeight.bold, // Blue text color
+                            ),
+                          ),
+                        ),
+
                       ],
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, String hintText, IconData icon,
-      {bool isPassword = false, bool isEmail = false, bool isPhone = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: TextFormField(
-        controller: controller,
-        obscureText: isPassword,
-        keyboardType: isEmail
-            ? TextInputType.emailAddress
-            : isPhone
-            ? TextInputType.phone
-            : TextInputType.text,
-        style: GoogleFonts.poppins(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: GoogleFonts.poppins(color: Colors.white70),
-          prefixIcon: Icon(icon, color: Colors.white70),
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.1),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField(TextEditingController controller, String hintText, IconData icon, bool isPasswordField) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: TextFormField(
-        controller: controller,
-        obscureText: isPasswordField ? _obscurePassword : _obscureConfirmPassword,
-        style: GoogleFonts.poppins(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: GoogleFonts.poppins(color: Colors.white70),
-          prefixIcon: Icon(icon, color: Colors.white70),
-          suffixIcon: IconButton(
-            icon: Icon(isPasswordField ? (_obscurePassword ? Icons.visibility_off : Icons.visibility) : (_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility), color: Colors.white70),
-            onPressed: () {
-              setState(() {
-                if (isPasswordField) {
-                  _obscurePassword = !_obscurePassword;
-                } else {
-                  _obscureConfirmPassword = !_obscureConfirmPassword;
-                }
-              });
-            },
-          ),
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.1),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
           ),
         ),
       ),

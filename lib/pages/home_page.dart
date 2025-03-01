@@ -29,17 +29,21 @@ class _HomePageState extends State<HomePage> {
     _fetchUserDetails();
   }
 
+
   void _fetchUserDetails() async {
     User? user = _auth.currentUser;
-    if(user != null){
-      DocumentSnapshot userDoc =
-          await _firestore.collection("users").doc(user.uid).get();
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc = await _firestore.collection("users").doc(user.uid).get();
 
-      if(userDoc.exists){
-        setState(() {
-          fullName = "${userDoc['firstName']} ${userDoc['lastName']}";
-          profilePicUrl = userDoc['profilePicUrl'] ?? "";
-        });
+        if (userDoc.exists) {
+          setState(() {
+            fullName = "${userDoc['firstName']} ${userDoc['lastName']}";
+            profilePicUrl = userDoc['profilePicUrl'] ?? "";
+          });
+        }
+      } catch (e) {
+        print("Error fetching user details: $e");
       }
     }
   }

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:alumniconnectmca/pages/login_page.dart';
+import 'package:alumniconnectmca/pages/profile_page.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class _DrawerPageState extends State<DrawerPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String fullName = "Loading..."; // Default name
+  // String profilePicUrl = "";
 
   @override
   void initState() {
@@ -30,6 +32,7 @@ class _DrawerPageState extends State<DrawerPage> {
         setState(() {
           fullName =
           "${userDoc['firstName']} ${userDoc['lastName']}"; // Combine first & last name
+          // profilePicUrl = userDoc['profilePicUrl'] ?? "";
         });
       }
     }
@@ -70,7 +73,10 @@ class _DrawerPageState extends State<DrawerPage> {
             // Navigate to Home
           }),
           _buildDrawerItem(Icons.person, "Profile", () {
-            // Navigate to Settings
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(builder: (context) => ProfilePage(fullName, profilePicUrl)),
+            // );
           }),
           _buildDrawerItem(Icons.info, "About", () {
             // Navigate to About
