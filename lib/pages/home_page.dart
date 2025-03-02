@@ -1,58 +1,17 @@
-import 'dart:io';
 import 'package:alumniconnectmca/pages/profile_page.dart';
 import 'package:alumniconnectmca/widgets/drawer_page.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:alumniconnectmca/providers/home_provider.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final ImagePicker _picker = ImagePicker();
-
-  String fullName = "User";
-  String profilePicUrl = "";
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserDetails();
-  }
-
-
-  void _fetchUserDetails() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        DocumentSnapshot userDoc = await _firestore.collection("users").doc(user.uid).get();
-
-        if (userDoc.exists) {
-          setState(() {
-            fullName = "${userDoc['firstName']} ${userDoc['lastName']}";
-            profilePicUrl = userDoc['profilePicUrl'] ?? "";
-          });
-        }
-      } catch (e) {
-        print("Error fetching user details: $e");
-      }
-    }
-  }
-
-
-  @override
   Widget build(BuildContext context) {
+    final homeProvider = context.watch<HomeProvider>();
+
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
         backgroundColor: Colors.grey[200],
@@ -61,12 +20,6 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.menu, size: 30),
-          onPressed: () {
-            _scaffoldKey.currentState?.openDrawer();
-          },
-        ),
         actions: [
           IconButton(
             icon: Icon(Icons.notifications),
@@ -78,56 +31,53 @@ class _HomePageState extends State<HomePage> {
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-        // Welcome Banner
-        Container(
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.blueAccent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        ProfilePage(fullName, profilePicUrl),
+            // Welcome Banner
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {},
+                    child: Hero(
+                      tag: "profilePic",
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundImage: homeProvider.profilePicUrl.isNotEmpty
+                            ? NetworkImage(homeProvider.profilePicUrl)
+                            : AssetImage("assets/default_avatar.png")
+                        as ImageProvider,
+                      ),
+                    ),
                   ),
-                );
-              },
-              child: Hero(
-                tag: "profilePic",
-                child: CircleAvatar(
-                  radius: 30,
-                  backgroundImage: profilePicUrl.isNotEmpty
-                      ? NetworkImage(profilePicUrl)
-                      : AssetImage("assets/default_avatar.png")
-                  as ImageProvider,
-                ),
+                  SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Welcome, ${homeProvider.fullName}!",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        "Stay connected with your alumni network",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Welcome, $fullName!",
-                    style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white)),
-                SizedBox(height: 5),
-                Text("Stay connected with your alumni network",
-                    style: TextStyle(color: Colors.white70)),
-              ],
-            ),
-          ],
-        ),
-      ),
-      SizedBox(height: 20),
+            SizedBox(height: 20),
 
             // Quick Access Buttons
             Row(
@@ -157,7 +107,7 @@ class _HomePageState extends State<HomePage> {
             _sectionTitle("Job Opportunities"),
             _jobCard("Software Engineer", "Google, Remote"),
             _jobCard("Product Manager", "Amazon, New York"),
-            ],
+          ],
         ),
       ),
     );
@@ -179,11 +129,11 @@ class _HomePageState extends State<HomePage> {
 
   Widget _sectionTitle(String title) {
     return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-    child: Text(
-    title,
-    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-    ),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        title,
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
     );
   }
 
@@ -208,7 +158,10 @@ class _HomePageState extends State<HomePage> {
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: CircleAvatar(child: Icon(Icons.person, color: Colors.white), backgroundColor: Colors.blueAccent),
+        leading: CircleAvatar(
+          child: Icon(Icons.person, color: Colors.white),
+          backgroundColor: Colors.blueAccent,
+        ),
         title: Text(author, style: TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(content, maxLines: 2, overflow: TextOverflow.ellipsis),
         trailing: Icon(Icons.thumb_up_alt_outlined, size: 20),

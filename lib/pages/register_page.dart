@@ -23,47 +23,50 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   String _selectedUserType = "Student";
 
+  /// 🔥 Updated this function to call `_signup(context)`
   void _signUp() {
-    if(_formKey.currentState!.validate()) {
-      print("Signing up...");
-    }
-    else {
-      print("Enter all the fields");
+    if (_formKey.currentState!.validate()) {
+      _signup(context); // 🔥 Call actual signup function
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please fill in all the fields.")),
+      );
     }
   }
 
+  /// ✅ Correct Signup Logic
   void _signup(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      if (_passwordController.text != _confirmPasswordController.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Passwords do not match!")),
-        );
-        return;
-      }
-
-      UserModel newUser = UserModel(
-        firstName: _firstNameController.text,
-        lastName: _lastNameController.text,
-        rollNo: _rollNoController.text,
-        email: _emailController.text,
-        phone: _phoneController.text,
-        linkedIn: _linkedInController.text,
-        userType: _selectedUserType,
-        password: _passwordController.text,
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Passwords do not match!")),
       );
+      return;
+    }
 
-      String? error = await context.read<SignupProvider>().signUp(newUser, _passwordController.text);
+    // Create user model
+    UserModel newUser = UserModel(
+      firstName: _firstNameController.text,
+      lastName: _lastNameController.text,
+      rollNo: _rollNoController.text,
+      email: _emailController.text,
+      phone: _phoneController.text,
+      linkedIn: _linkedInController.text,
+      userType: _selectedUserType,
+      password: _passwordController.text,
+    );
 
-      if (error == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Signup Successful! Redirecting to login...")),
-        );
-        Future.delayed(Duration(seconds: 2), () {
-          Navigator.pop(context);
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-      }
+    // Call signup provider
+    String? error = await context.read<SignupProvider>().signUp(newUser, _passwordController.text);
+
+    if (error == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Signup Successful! Redirecting to login...")),
+      );
+      Future.delayed(Duration(seconds: 2), () {
+        Navigator.pop(context);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -199,14 +202,14 @@ class _SignupPageState extends State<SignupPage> {
 
                         // Signup Button
                         ElevatedButton(
-                          onPressed: _signUp,
+                          onPressed: isLoading ? null : _signUp, // Disable button when loading
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white, // White background
+                            backgroundColor: Colors.white,
                             shadowColor: Colors.transparent,
                             padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(45), // Rounded borders
-                              side: BorderSide(color: Colors.blue), // Optional blue border
+                              borderRadius: BorderRadius.circular(45),
+                              side: BorderSide(color: Colors.blue),
                             ),
                           ),
                           child: isLoading
@@ -214,9 +217,9 @@ class _SignupPageState extends State<SignupPage> {
                               : Text(
                             "Sign Up",
                             style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            color: Colors.blue.shade900,
-                            fontWeight: FontWeight.bold, // Blue text color
+                              fontSize: 18,
+                              color: Colors.blue.shade900,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),

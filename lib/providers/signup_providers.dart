@@ -17,48 +17,60 @@ class SignupProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print("🔍 Checking if roll number exists...");
       QuerySnapshot query = await FirebaseFirestore.instance
           .collection("users")
           .where("rollNo", isEqualTo: user.rollNo)
           .get();
 
       if (query.docs.isNotEmpty) {
+        print("❌ Roll number already registered!");
         _isLoading = false;
         notifyListeners();
         return "Roll number already registered!";
       }
 
-      // ✅ Hash the password before storing it
+      print("🔐 Hashing password...");
       String hashedPassword = sha256.convert(utf8.encode(password)).toString();
 
+      print("📝 Registering user with Firebase...");
       UserCredential? userCredential = await _authService.registerUser(user.email, password);
-      if (userCredential != null) {
-        String uid = userCredential.user!.uid;
 
-        // ✅ Create a new user with hashed password
-        UserModel newUser = UserModel(
-          firstName: user.firstName,
-          lastName: user.lastName,
-          rollNo: user.rollNo,
-          email: user.email,
-          phone: user.phone,
-          linkedIn: user.linkedIn,
-          userType: user.userType,
-          password: hashedPassword, // ✅ Store hashed password
-        );
-
-        await FirebaseFirestore.instance.collection("users").doc(uid).set(newUser.toMap());
-
+      if (userCredential?.user == null) {
+        print("❌ User registration failed!");
         _isLoading = false;
         notifyListeners();
-        return null; // Success
+        return "User registration failed!";
       }
+
+      // ✅ Fetch UID safely
+      String uid = userCredential!.user!.uid;
+      print("✅ User registered with UID: $uid");
+
+      print("📦 Saving user to Firestore...");
+      UserModel newUser = UserModel(
+        uid: uid,  // ✅ Store UID in Firestore
+        firstName: user.firstName,
+        lastName: user.lastName,
+        rollNo: user.rollNo,
+        email: user.email,
+        phone: user.phone,
+        linkedIn: user.linkedIn,
+        userType: user.userType,
+        password: hashedPassword, // ✅ Store hashed password
+      );
+
+      await FirebaseFirestore.instance.collection("users").doc(uid).set(newUser.toMap());
+      print("✅ User saved successfully in Firestore!");
+
+      _isLoading = false;
+      notifyListeners();
+      return null; // ✅ Success
     } catch (e) {
+      print("❌ Signup Error: $e");
       _isLoading = false;
       notifyListeners();
       return "Error: ${e.toString()}";
     }
-
-    return "Unknown error occurred!";
   }
 }

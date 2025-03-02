@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:alumniconnectmca/firebase_options.dart';
 import 'package:provider/provider.dart';
+import 'package:alumniconnectmca/providers/home_provider.dart';
+import 'package:alumniconnectmca/pages/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +16,8 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => SignupProvider()),
+        ChangeNotifierProvider(create: (context) => SignupProvider()),
+        ChangeNotifierProvider(create: (context) => HomeProvider()),
       ],
       child: const MyApp(),
     ),
