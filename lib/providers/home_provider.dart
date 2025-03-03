@@ -13,24 +13,21 @@ class HomeProvider extends ChangeNotifier {
   String get profilePicUrl => _profilePicUrl;
 
   HomeProvider() {
-    fetchUserDetails();
+    listenToUserDetails();
   }
 
-  void fetchUserDetails() async {
+  void listenToUserDetails() {
     User? user = _auth.currentUser;
     if (user != null) {
-      try {
-        DocumentSnapshot userDoc =
-        await _firestore.collection("users").doc(user.uid).get();
-
+      _firestore.collection("users").doc(user.uid).snapshots().listen((userDoc) {
         if (userDoc.exists) {
           _fullName = "${userDoc['firstName']} ${userDoc['lastName']}";
           _profilePicUrl = userDoc['profilePicUrl'] ?? "";
           notifyListeners();
         }
-      } catch (e) {
-        print("Error fetching user details: $e");
-      }
+      }, onError: (error) {
+        print("Error listening to user details: $error");
+      });
     }
   }
 }

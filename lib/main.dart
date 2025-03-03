@@ -1,23 +1,25 @@
 import 'package:alumniconnectmca/auth_state/auth_checker.dart';
+import 'package:alumniconnectmca/providers/profile_provider.dart';
+import 'package:alumniconnectmca/providers/home_provider.dart';
 import 'package:alumniconnectmca/providers/signup_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:alumniconnectmca/firebase_options.dart';
 import 'package:provider/provider.dart';
-import 'package:alumniconnectmca/providers/home_provider.dart';
 import 'package:alumniconnectmca/pages/home_page.dart';
+import 'package:alumniconnectmca/pages/profile_page.dart';
+import 'package:alumniconnectmca/pages/login_page.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => SignupProvider()),
         ChangeNotifierProvider(create: (context) => HomeProvider()),
+        ChangeNotifierProvider(create: (context) => ProfileProvider()),
       ],
       child: const MyApp(),
     ),
@@ -37,7 +39,13 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: AuthChecker(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => AuthChecker(),
+        '/home': (context) => HomePage(),
+        '/profile': (context) => ProfilePage(),
+        '/login': (context) => LoginPage(),
+      },
     );
   }
 }

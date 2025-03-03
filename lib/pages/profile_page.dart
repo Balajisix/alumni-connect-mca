@@ -3,90 +3,81 @@ import 'package:provider/provider.dart';
 import 'package:alumniconnectmca/providers/profile_provider.dart';
 
 class ProfilePage extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ProfileProvider(),
-      child: Consumer<ProfileProvider>(
-        builder: (context, profileProvider, child) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text("Profile"),
-              centerTitle: true,
-              backgroundColor: Colors.blueAccent,
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    _editProfileDialog(context, profileProvider);
-                  },
-                ),
-              ],
-            ),
-            body: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      profileProvider.pickAndUploadProfilePic();
-                    },
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundImage: profileProvider.profilePicUrl.isNotEmpty
-                          ? NetworkImage(profileProvider.profilePicUrl)
-                          : AssetImage("assets/default_avatar.png")
-                      as ImageProvider,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    profileProvider.fullName,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    profileProvider.email,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  SizedBox(height: 20),
-                  _sectionTitle("About"),
-                  _editableField(
-                    profileProvider.about.isEmpty
-                        ? "Add About"
-                        : profileProvider.about,
-                        () => _editField(context, profileProvider, "about"),
-                  ),
-                  _sectionTitle("Education"),
-                  _editableField(
-                    profileProvider.education.isEmpty
-                        ? "Add Education"
-                        : profileProvider.education.join("\n"),
-                        () => _editField(context, profileProvider, "education"),
-                  ),
-                  _sectionTitle("Skills"),
-                  _editableField(
-                    profileProvider.skills.isEmpty
-                        ? "Add Skills"
-                        : profileProvider.skills.join(", "),
-                        () => _editField(context, profileProvider, "skills"),
-                  ),
-                  _sectionTitle("Experience"),
-                  _editableField(
-                    profileProvider.experience.isEmpty
-                        ? "Add Experience"
-                        : profileProvider.experience.join("\n"),
-                        () => _editField(context, profileProvider, "experience"),
-                  ),
-                ],
+    final profileProvider = Provider.of<ProfileProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Profile"),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {
+              _editProfileDialog(context, profileProvider);
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () {
+                profileProvider.pickAndUploadProfilePic();
+              },
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: profileProvider.profilePicUrl.isNotEmpty
+                    ? NetworkImage(profileProvider.profilePicUrl)
+                    : AssetImage("assets/default_avatar.png") as ImageProvider,
               ),
             ),
-          );
-        },
+            SizedBox(height: 10),
+            Text(
+              profileProvider.fullName,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              profileProvider.email,
+              style: TextStyle(color: Colors.grey),
+            ),
+            SizedBox(height: 20),
+            _sectionTitle("About"),
+            _editableField(
+              profileProvider.about.isEmpty ? "Add About" : profileProvider.about,
+                  () => _editField(context, profileProvider, "about"),
+            ),
+            _sectionTitle("Education"),
+            _editableField(
+              profileProvider.education.isEmpty
+                  ? "Add Education"
+                  : profileProvider.education.join("\n"),
+                  () => _editField(context, profileProvider, "education"),
+            ),
+            _sectionTitle("Skills"),
+            _editableField(
+              profileProvider.skills.isEmpty
+                  ? "Add Skills"
+                  : profileProvider.skills.join(", "),
+                  () => _editField(context, profileProvider, "skills"),
+            ),
+            _sectionTitle("Experience"),
+            _editableField(
+              profileProvider.experience.isEmpty
+                  ? "Add Experience"
+                  : profileProvider.experience.join("\n"),
+                  () => _editField(context, profileProvider, "experience"),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -124,12 +115,13 @@ class ProfilePage extends StatelessWidget {
   }
 
   void _editField(BuildContext context, ProfileProvider provider, String field) {
-    TextEditingController controller =
-    TextEditingController(text: field == "education" || field == "experience"
-        ? provider.education.join("\n")
-        : field == "skills"
-        ? provider.skills.join(", ")
-        : provider.about);
+    TextEditingController controller = TextEditingController(
+      text: field == "education" || field == "experience"
+          ? provider.education.join("\n")
+          : field == "skills"
+          ? provider.skills.join(", ")
+          : provider.about,
+    );
 
     showDialog(
       context: context,
