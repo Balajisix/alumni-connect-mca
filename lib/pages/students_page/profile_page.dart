@@ -1,19 +1,27 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:alumniconnectmca/providers/profile_provider.dart';
+import 'package:alumniconnectmca/providers/students_provider/profile_provider.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
   Widget _buildViewMode(ProfileProvider provider, BuildContext context) {
+    // Custom blue theme colors
+    final Color primaryBlue = Color(0xFF1E88E5);
+    final Color lightBlue = Color(0xFFBBDEFB);
+    final Color darkBlue = Color(0xFF1565C0);
     final theme = Theme.of(context);
 
     Widget _buildSection(String title, Widget content) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          Text(title,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: darkBlue,
+              )
+          ),
           const SizedBox(height: 8),
           content,
           const SizedBox(height: 24),
@@ -32,7 +40,7 @@ class ProfilePage extends StatelessWidget {
                 height: 200,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.7)],
+                    colors: [darkBlue, primaryBlue],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -83,7 +91,7 @@ class ProfilePage extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: theme.cardColor,
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
@@ -92,6 +100,7 @@ class ProfilePage extends StatelessWidget {
                                 offset: const Offset(0, 2),
                               ),
                             ],
+                            border: Border.all(color: lightBlue, width: 1),
                           ),
                           child: Text(provider.aboutController.text),
                         ),
@@ -102,13 +111,21 @@ class ProfilePage extends StatelessWidget {
                       "Education",
                       Card(
                         elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: lightBlue, width: 1),
+                        ),
+                        color: Colors.white,
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(provider.institutionController.text,
-                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryBlue,
+                                  )),
                               const SizedBox(height: 4),
                               Text("${provider.degreeController.text} in ${provider.fieldOfStudyController.text}"),
                               const SizedBox(height: 4),
@@ -129,8 +146,8 @@ class ProfilePage extends StatelessWidget {
                           runSpacing: 8,
                           children: provider.skillsController.text.split(',').map((skill) =>
                               Chip(
-                                label: Text(skill.trim()),
-                                backgroundColor: theme.primaryColor.withOpacity(0.1),
+                                label: Text(skill.trim(), style: TextStyle(color: darkBlue)),
+                                backgroundColor: lightBlue.withOpacity(0.5),
                               )
                           ).toList(),
                         ),
@@ -145,13 +162,21 @@ class ProfilePage extends StatelessWidget {
                             return Card(
                               margin: const EdgeInsets.only(bottom: 12),
                               elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: BorderSide(color: lightBlue, width: 1),
+                              ),
+                              color: Colors.white,
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(exp.roleController.text,
-                                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: primaryBlue,
+                                        )),
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
@@ -179,6 +204,11 @@ class ProfilePage extends StatelessWidget {
                             return Card(
                               margin: const EdgeInsets.only(bottom: 12),
                               elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: BorderSide(color: lightBlue, width: 1),
+                              ),
+                              color: Colors.white,
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
                                 child: Column(
@@ -189,10 +219,13 @@ class ProfilePage extends StatelessWidget {
                                       children: [
                                         Expanded(
                                           child: Text(proj.titleController.text,
-                                              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                                              style: theme.textTheme.titleMedium?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: primaryBlue,
+                                              )),
                                         ),
                                         if (proj.linkController.text.isNotEmpty)
-                                          Icon(Icons.link, color: theme.primaryColor),
+                                          Icon(Icons.link, color: primaryBlue),
                                       ],
                                     ),
                                     const SizedBox(height: 8),
@@ -205,10 +238,10 @@ class ProfilePage extends StatelessWidget {
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: theme.primaryColor.withOpacity(0.1),
+                                              color: lightBlue.withOpacity(0.5),
                                               borderRadius: BorderRadius.circular(4),
                                             ),
-                                            child: Text(tech.trim(), style: TextStyle(fontSize: 12)),
+                                            child: Text(tech.trim(), style: TextStyle(fontSize: 12, color: darkBlue)),
                                           )
                                       ).toList(),
                                     ),
@@ -232,7 +265,7 @@ class ProfilePage extends StatelessWidget {
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.emoji_events, color: theme.primaryColor, size: 20),
+                                    Icon(Icons.emoji_events, color: primaryBlue, size: 20),
                                     const SizedBox(width: 8),
                                     Expanded(child: Text(achievement.trim())),
                                   ],
@@ -252,6 +285,10 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildEditMode(ProfileProvider provider, BuildContext context) {
+    // Custom blue theme colors
+    final Color primaryBlue = Color(0xFF1E88E5);
+    final Color lightBlue = Color(0xFFBBDEFB);
+    final Color darkBlue = Color(0xFF1565C0);
     final theme = Theme.of(context);
 
     Widget _buildSectionTitle(String title) {
@@ -259,11 +296,36 @@ class ProfilePage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Row(
           children: [
-            Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            Text(title, style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: darkBlue,
+            )),
             const SizedBox(width: 8),
-            Expanded(child: Divider()),
+            Expanded(child: Divider(color: lightBlue)),
           ],
         ),
+      );
+    }
+
+    InputDecoration _buildInputDecoration(String label, {Icon? prefixIcon}) {
+      return InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: primaryBlue),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: lightBlue),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: primaryBlue, width: 2),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: lightBlue),
+        ),
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon.icon, color: primaryBlue) : null,
+        filled: true,
+        fillColor: Colors.white,
       );
     }
 
@@ -277,12 +339,12 @@ class ProfilePage extends StatelessWidget {
             child: Column(
               children: [
                 GestureDetector(
-                  onTap: () => provider.pickProfileImage(),
+                  onTap: () => provider.pickProfileImage(context),
                   child: Stack(
                     children: [
                       CircleAvatar(
                         radius: 60,
-                        backgroundColor: theme.primaryColor.withOpacity(0.2),
+                        backgroundColor: primaryBlue.withOpacity(0.2),
                         child: CircleAvatar(
                           radius: 58,
                           backgroundImage: provider.profileImage != null
@@ -298,7 +360,7 @@ class ProfilePage extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: theme.primaryColor,
+                            color: primaryBlue,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
@@ -308,7 +370,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text("Tap to change", style: theme.textTheme.bodySmall),
+                Text("Tap to change", style: TextStyle(color: primaryBlue, fontSize: 12)),
               ],
             ),
           ),
@@ -318,35 +380,20 @@ class ProfilePage extends StatelessWidget {
           _buildSectionTitle("Basic Information"),
           TextField(
             controller: provider.fullNameController,
-            decoration: InputDecoration(
-              labelText: "Full Name",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              prefixIcon: const Icon(Icons.person),
-            ),
+            decoration: _buildInputDecoration("Full Name", prefixIcon: const Icon(Icons.person)),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: provider.aboutController,
             maxLines: 3,
-            decoration: InputDecoration(
-              labelText: "About",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              prefixIcon: const Padding(
-                padding: EdgeInsets.only(bottom: 64),
-                child: Icon(Icons.info),
-              ),
-            ),
+            decoration: _buildInputDecoration("About", prefixIcon: const Icon(Icons.info)),
           ),
 
           // Education section
           _buildSectionTitle("Education"),
           TextField(
             controller: provider.institutionController,
-            decoration: InputDecoration(
-              labelText: "Institution",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              prefixIcon: const Icon(Icons.school),
-            ),
+            decoration: _buildInputDecoration("Institution", prefixIcon: const Icon(Icons.school)),
           ),
           const SizedBox(height: 12),
           Row(
@@ -354,20 +401,14 @@ class ProfilePage extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: provider.degreeController,
-                  decoration: InputDecoration(
-                    labelText: "Degree",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
+                  decoration: _buildInputDecoration("Degree"),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
                   controller: provider.fieldOfStudyController,
-                  decoration: InputDecoration(
-                    labelText: "Field of Study",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
+                  decoration: _buildInputDecoration("Field of Study"),
                 ),
               ),
             ],
@@ -378,20 +419,14 @@ class ProfilePage extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: provider.startYearController,
-                  decoration: InputDecoration(
-                    labelText: "Start Year",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
+                  decoration: _buildInputDecoration("Start Year"),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
                   controller: provider.endYearController,
-                  decoration: InputDecoration(
-                    labelText: "End Year",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
+                  decoration: _buildInputDecoration("End Year"),
                 ),
               ),
             ],
@@ -401,22 +436,14 @@ class ProfilePage extends StatelessWidget {
           _buildSectionTitle("Skills"),
           TextField(
             controller: provider.skillsController,
-            decoration: InputDecoration(
-              labelText: "Skills (comma separated)",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              prefixIcon: const Icon(Icons.stars),
-            ),
+            decoration: _buildInputDecoration("Skills (comma separated)", prefixIcon: const Icon(Icons.stars)),
           ),
 
           // Achievements section
           _buildSectionTitle("Achievements"),
           TextField(
             controller: provider.achievementsController,
-            decoration: InputDecoration(
-              labelText: "Achievements (comma separated)",
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              prefixIcon: const Icon(Icons.emoji_events),
-            ),
+            decoration: _buildInputDecoration("Achievements (comma separated)", prefixIcon: const Icon(Icons.emoji_events)),
           ),
 
           // Experience section
@@ -426,7 +453,11 @@ class ProfilePage extends StatelessWidget {
             return Card(
               margin: const EdgeInsets.only(bottom: 16),
               elevation: 1,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: lightBlue),
+              ),
+              color: Colors.white,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -434,7 +465,11 @@ class ProfilePage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text("Experience ${index + 1}", style: theme.textTheme.titleMedium),
+                        Text("Experience ${index + 1}",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            )),
                         const Spacer(),
                         if (provider.experienceFields.length > 1)
                           IconButton(
@@ -443,41 +478,26 @@ class ProfilePage extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const Divider(),
+                    Divider(color: lightBlue),
                     TextField(
                       controller: exp.companyController,
-                      decoration: const InputDecoration(
-                        labelText: "Company",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.business),
-                      ),
+                      decoration: _buildInputDecoration("Company", prefixIcon: const Icon(Icons.business)),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: exp.roleController,
-                      decoration: const InputDecoration(
-                        labelText: "Role",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.work),
-                      ),
+                      decoration: _buildInputDecoration("Role", prefixIcon: const Icon(Icons.work)),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: exp.durationController,
-                      decoration: const InputDecoration(
-                        labelText: "Duration",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.date_range),
-                      ),
+                      decoration: _buildInputDecoration("Duration", prefixIcon: const Icon(Icons.date_range)),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: exp.descriptionController,
                       maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: "Description",
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: _buildInputDecoration("Description"),
                     ),
                   ],
                 ),
@@ -488,9 +508,10 @@ class ProfilePage extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
               onPressed: () => provider.addExperience(),
-              icon: const Icon(Icons.add),
-              label: const Text("Add Experience"),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text("Add Experience", style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -503,7 +524,11 @@ class ProfilePage extends StatelessWidget {
             return Card(
               margin: const EdgeInsets.only(bottom: 16),
               elevation: 1,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: lightBlue),
+              ),
+              color: Colors.white,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -511,7 +536,11 @@ class ProfilePage extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text("Project ${index + 1}", style: theme.textTheme.titleMedium),
+                        Text("Project ${index + 1}",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: darkBlue,
+                              fontWeight: FontWeight.bold,
+                            )),
                         const Spacer(),
                         if (provider.projectFields.length > 1)
                           IconButton(
@@ -520,41 +549,26 @@ class ProfilePage extends StatelessWidget {
                           ),
                       ],
                     ),
-                    const Divider(),
+                    Divider(color: lightBlue),
                     TextField(
                       controller: proj.titleController,
-                      decoration: const InputDecoration(
-                        labelText: "Title",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.title),
-                      ),
+                      decoration: _buildInputDecoration("Title", prefixIcon: const Icon(Icons.title)),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: proj.descriptionController,
                       maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: "Description",
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: _buildInputDecoration("Description"),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: proj.technologiesController,
-                      decoration: const InputDecoration(
-                        labelText: "Technologies (comma separated)",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.code),
-                      ),
+                      decoration: _buildInputDecoration("Technologies (comma separated)", prefixIcon: const Icon(Icons.code)),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: proj.linkController,
-                      decoration: const InputDecoration(
-                        labelText: "Link",
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.link),
-                      ),
+                      decoration: _buildInputDecoration("Link", prefixIcon: const Icon(Icons.link)),
                     ),
                   ],
                 ),
@@ -565,9 +579,10 @@ class ProfilePage extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
               onPressed: () => provider.addProject(),
-              icon: const Icon(Icons.add),
-              label: const Text("Add Project"),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text("Add Project", style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
@@ -577,8 +592,9 @@ class ProfilePage extends StatelessWidget {
           // Save button
           ElevatedButton(
             onPressed: () => provider.saveProfile(),
-            child: const Text("Save Profile"),
+            child: const Text("Save Profile", style: TextStyle(color: Colors.white, fontSize: 16)),
             style: ElevatedButton.styleFrom(
+              backgroundColor: darkBlue,
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -594,17 +610,19 @@ class ProfilePage extends StatelessWidget {
     return Consumer<ProfileProvider>(
       builder: (context, provider, _) {
         return Scaffold(
+          backgroundColor: Colors.white,
           appBar: AppBar(
-            title: const Text("Profile"),
+            title: const Text("Profile", style: TextStyle(color: Colors.white)),
+            backgroundColor: Color(0xFF1565C0),
             actions: [
               IconButton(
-                icon: Icon(provider.isEditing ? Icons.check : Icons.edit),
+                icon: Icon(provider.isEditing ? Icons.check : Icons.edit, color: Colors.white),
                 onPressed: () => provider.toggleEditing(),
               ),
             ],
           ),
           body: provider.isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(child: CircularProgressIndicator(color: Color(0xFF1E88E5)))
               : provider.isEditing
               ? _buildEditMode(provider, context)
               : _buildViewMode(provider, context),

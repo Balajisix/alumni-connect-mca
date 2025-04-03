@@ -1,8 +1,8 @@
-import 'package:alumniconnectmca/pages/profile_page.dart';
 import 'package:alumniconnectmca/widgets/drawer_page.dart';
+import 'package:alumniconnectmca/pages/students_page/alumni_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:alumniconnectmca/providers/home_provider.dart';
+import 'package:alumniconnectmca/providers/students_provider/home_provider.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -83,7 +83,13 @@ class HomePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _quickAccessButton(Icons.group, "Find Alumni"),
+                _quickAccessButton(Icons.group, "Find Alumni", onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AlumniPage()),
+                  );
+                }),
                 _quickAccessButton(Icons.event, "Events"),
                 _quickAccessButton(Icons.work, "Jobs"),
                 _quickAccessButton(Icons.message, "Chat"),
@@ -113,17 +119,20 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _quickAccessButton(IconData icon, String label) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 30,
-          backgroundColor: Colors.blueAccent,
-          child: Icon(icon, color: Colors.white, size: 30),
-        ),
-        SizedBox(height: 5),
-        Text(label, style: TextStyle(fontSize: 14)),
-      ],
+  Widget _quickAccessButton(IconData icon, String label, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.blueAccent,
+            child: Icon(icon, color: Colors.white, size: 30),
+          ),
+          SizedBox(height: 5),
+          Text(label, style: TextStyle(fontSize: 14)),
+        ],
+      ),
     );
   }
 

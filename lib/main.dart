@@ -1,13 +1,19 @@
 import 'package:alumniconnectmca/auth_state/auth_checker.dart';
-import 'package:alumniconnectmca/providers/profile_provider.dart';
-import 'package:alumniconnectmca/providers/home_provider.dart';
-import 'package:alumniconnectmca/providers/signup_providers.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
-import 'package:alumniconnectmca/pages/home_page.dart';
-import 'package:alumniconnectmca/pages/profile_page.dart';
+import 'package:alumniconnectmca/pages/alumni_page/alumni_home.dart';
+import 'package:alumniconnectmca/pages/alumni_page/alumni_profile.dart';
+import 'package:alumniconnectmca/pages/students_page/alumni_page.dart';
+import 'package:alumniconnectmca/pages/students_page/home_page.dart';
+import 'package:alumniconnectmca/pages/students_page/profile_page.dart';
 import 'package:alumniconnectmca/pages/login_page.dart';
+import 'package:alumniconnectmca/providers/alumni_provider/alumni_home_provider.dart';
+import 'package:alumniconnectmca/providers/alumni_provider/alumni_profile_provider.dart';
+import 'package:alumniconnectmca/providers/students_provider/home_provider.dart';
+import 'package:alumniconnectmca/providers/students_provider/profile_provider.dart';
+import 'package:alumniconnectmca/providers/signup_providers.dart';
+import 'package:alumniconnectmca/providers/students_provider/alumni_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -18,8 +24,11 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => SignupProvider()),
-        ChangeNotifierProvider(create: (_) => HomeProvider()),
-        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider()),           // Student HomeProvider
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),        // Student ProfileProvider
+        ChangeNotifierProvider(create: (_) => AlumniHomeProvider()),     // Alumni HomeProvider
+        ChangeNotifierProvider(create: (_) => ProfileProviderAlumni()),
+        ChangeNotifierProvider(create: (_) => AlumniProvider())// Alumni ProfileProvider
       ],
       child: const MyApp(),
     ),
@@ -39,12 +48,18 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      initialRoute: '/',
+      // Let AuthChecker decide which home page to display.
+      home: AuthChecker(),
       routes: {
-        '/': (context) => AuthChecker(),
-        '/home': (context) => HomePage(),
-        '/profile': (context) => ProfilePage(),
         '/login': (context) => LoginPage(),
+        // Student routes
+        '/studentHome': (context) => HomePage(),
+        '/studentProfile': (context) => ProfilePage(),
+        '/findAlumni' : (context) => AlumniPage(),
+        // Alumni routes
+        '/alumniHome': (context) => AlumniHomePage(),
+        '/alumniProfile': (context) => ProfilePageAlumni(),
+        // You can add more routes (like chat, events posting, etc.) here.
       },
     );
   }

@@ -1,5 +1,5 @@
 import 'package:alumniconnectmca/pages/login_page.dart';
-import 'package:alumniconnectmca/pages/students_page/profile_page.dart';
+import 'package:alumniconnectmca/pages/alumni_page/alumni_profile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +13,7 @@ class DrawerPage extends StatelessWidget {
     // Use a FutureBuilder to fetch profile data directly
     return FutureBuilder<DocumentSnapshot>(
       future: user != null
-          ? FirebaseFirestore.instance.collection('profiles').doc(user.uid).get()
+          ? FirebaseFirestore.instance.collection('alumni-profile').doc(user.uid).get()
           : null,
       builder: (context, snapshot) {
         String fullName = "Guest";
@@ -60,7 +60,7 @@ class DrawerPage extends StatelessWidget {
               _buildDrawerItem(Icons.person, "Profile", () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                  MaterialPageRoute(builder: (context) => const ProfilePageAlumni()),
                 );
               }),
               _buildDrawerItem(Icons.info, "About", () {

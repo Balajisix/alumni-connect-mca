@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:alumniconnectmca/models/profile_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -87,84 +86,143 @@ class ProfileProvider extends ChangeNotifier {
   final ImagePicker picker = ImagePicker();
 
   ProfileProvider() {
-    loadProfileData();
+    _listenToProfileData();
   }
 
-  /// Loads profile data from Firestore (collection: 'profiles').
-  Future<void> loadProfileData() async {
-    isLoading = true;
-    notifyListeners();
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance
-          .collection('profiles')
-          .doc(user.uid)
-          .get();
-      if (doc.exists) {
-        final data = doc.data()!;
-        final profile = Profile.fromMap(data);
-        fullNameController.text = profile.fullName;
-        profilePicController.text = profile.profilePicUrl;
-        aboutController.text = profile.about;
-
-        if (profile.education.isNotEmpty) {
-          final edu = profile.education.first;
-          institutionController.text = edu.institution;
-          degreeController.text = edu.degree;
-          fieldOfStudyController.text = edu.fieldOfStudy;
-          startYearController.text = edu.startYear;
-          endYearController.text = edu.endYear;
-        }
-
-        skillsController.text = profile.skills.join(', ');
-        achievementsController.text = profile.achievements.join(', ');
-
-        // Populate experiences.
-        if (profile.experience.isNotEmpty) {
-          experienceFields = profile.experience
-              .map((exp) => ExperienceFieldData(
-            company: exp.company,
-            role: exp.role,
-            duration: exp.duration,
-            description: exp.description,
-          ))
-              .toList();
-        } else {
-          experienceFields = [ExperienceFieldData()];
-        }
-
-        // Populate projects.
-        if (profile.projects.isNotEmpty) {
-          projectFields = profile.projects
-              .map((proj) => ProjectFieldData(
-            title: proj.title,
-            description: proj.description,
-            technologies: proj.technologies.join(', '),
-            link: proj.link,
-          ))
-              .toList();
-        } else {
-          projectFields = [ProjectFieldData()];
-        }
-      } else {
-        // No profile exists; initialize with one blank experience/project field.
-        experienceFields = [ExperienceFieldData()];
-        projectFields = [ProjectFieldData()];
+  /// Instead of a one-time load, we listen for real-time updates.
+  /// If a new user logs in, or the doc changes, we get the correct data.
+  void _listenToProfileData() {
+    // Listen to changes in authentication state.
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      // When a new user signs in or signs out, clear any existing subscriptions if needed.
+      if (user == null) {
+        // No user is logged in, so clear the profile fields.
+        _setBlankFields();
+        isLoading = false;
+        notifyListeners();
+        return;
       }
-    }
-    isLoading = false;
-    notifyListeners();
+
+      // Listen to profile data changes for the new user's UID.
+      FirebaseFirestore.instance
+          .collection('profiles') // or 'users' if that's your intended collection
+          .doc(user.uid)
+          .snapshots()
+          .listen((docSnapshot) {
+        if (!docSnapshot.exists) {
+          // Document doesn't exist yet, so set blank data
+          _setBlankFields();
+        } else {
+          final data = docSnapshot.data()!;
+          final profile = Profile.fromMap(data);
+          _populateControllers(profile);
+        }
+        isLoading = false;
+        notifyListeners();
+      }, onError: (error) {
+        debugPrint("Error listening to profile data: $error");
+        isLoading = false;
+        notifyListeners();
+      });
+    });
   }
 
-  /// Picks a new profile picture from the gallery.
-  Future<void> pickProfileImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+  /// Sets all fields to blank if there's no profile doc.
+  void _setBlankFields() {
+    fullNameController.text = "";
+    profilePicController.text = "";
+    aboutController.text = "";
+    institutionController.text = "";
+    degreeController.text = "";
+    fieldOfStudyController.text = "";
+    startYearController.text = "";
+    endYearController.text = "";
+    skillsController.text = "";
+    achievementsController.text = "";
+    experienceFields = [ExperienceFieldData()];
+    projectFields = [ProjectFieldData()];
+  }
+
+  /// Populates all controllers based on the given Profile model.
+  void _populateControllers(Profile profile) {
+    fullNameController.text = profile.fullName;
+    profilePicController.text = profile.profilePicUrl;
+    aboutController.text = profile.about;
+
+    if (profile.education.isNotEmpty) {
+      final edu = profile.education.first;
+      institutionController.text = edu.institution;
+      degreeController.text = edu.degree;
+      fieldOfStudyController.text = edu.fieldOfStudy;
+      startYearController.text = edu.startYear;
+      endYearController.text = edu.endYear;
+    } else {
+      institutionController.text = "";
+      degreeController.text = "";
+      fieldOfStudyController.text = "";
+      startYearController.text = "";
+      endYearController.text = "";
+    }
+
+    skillsController.text = profile.skills.join(', ');
+    achievementsController.text = profile.achievements.join(', ');
+
+    // Populate experiences.
+    if (profile.experience.isNotEmpty) {
+      experienceFields = profile.experience.map((exp) {
+        return ExperienceFieldData(
+          company: exp.company,
+          role: exp.role,
+          duration: exp.duration,
+          description: exp.description,
+        );
+      }).toList();
+    } else {
+      experienceFields = [ExperienceFieldData()];
+    }
+
+    // Populate projects.
+    if (profile.projects.isNotEmpty) {
+      projectFields = profile.projects.map((proj) {
+        return ProjectFieldData(
+          title: proj.title,
+          description: proj.description,
+          technologies: proj.technologies.join(', '),
+          link: proj.link,
+        );
+      }).toList();
+    } else {
+      projectFields = [ProjectFieldData()];
+    }
+  }
+
+  /// Picks a new profile picture from the gallery with a size check.
+  Future<void> pickProfileImage(BuildContext context) async {
+    // Pick and compress image: imageQuality reduces file size (0-100, lower means more compression).
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50, // Adjust this value if needed.
+    );
     if (pickedFile != null) {
-      profileImage = File(pickedFile.path);
+      final file = File(pickedFile.path);
+      final int fileSize = await file.length();
+      // 1.5MB = 1572864 bytes.
+      if (fileSize > 1572864) {
+        // Show error message if image is too large.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Image size must be less than 1.5MB.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+      // If the image is valid, set profileImage and update UI.
+      profileImage = file;
       notifyListeners();
     }
   }
+
 
   /// Uploads the profile picture to Firebase Storage and returns its download URL.
   Future<String> uploadProfilePicture(File file) async {
@@ -227,8 +285,10 @@ class ProfileProvider extends ChangeNotifier {
               endYear: endYearController.text,
             )
           ],
-          skills:
-          skillsController.text.split(',').map((s) => s.trim()).toList(),
+          skills: skillsController.text
+              .split(',')
+              .map((s) => s.trim())
+              .toList(),
           experience: experiences,
           projects: projects,
           achievements: achievementsController.text
@@ -237,16 +297,15 @@ class ProfileProvider extends ChangeNotifier {
               .toList(),
         );
 
+        // Use the user's UID for the doc
         await FirebaseFirestore.instance
             .collection('profiles')
             .doc(user.uid)
             .set(profile.toMap(), SetOptions(merge: true));
       }
     } catch (e) {
-      // Optionally, handle error (e.g., log error, show a message)
       debugPrint("Error saving profile: $e");
     } finally {
-      // Always reset loading and toggle editing off.
       isEditing = false;
       isLoading = false;
       notifyListeners();
