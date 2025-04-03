@@ -11,14 +11,52 @@ class AlumniProvider extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      // Query the 'alumni-profile' collection
-      final querySnapshot = await FirebaseFirestore.instance
+      // Fetch all alumni profiles
+      final alumniQuerySnapshot = await FirebaseFirestore.instance
           .collection('alumni-profile')
           .get();
 
-      alumniList = querySnapshot.docs
-          .map((doc) => Profile.fromMap(doc.data()))
-          .toList();
+      List<Profile> tempAlumniList = [];
+
+      // Iterate over each alumni profile
+      for (var doc in alumniQuerySnapshot.docs) {
+        // Parse the basic profile data
+        Profile profile = Profile.fromMap(doc.data());
+
+        // Assume your alumni-profile document has a field 'uid' or you can use doc.id.
+        String uid = doc.data()['uid'] ?? doc.id;
+
+        // Fetch additional fields from the users collection using the uid
+        final userDocSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .get();
+
+        if (userDocSnapshot.exists) {
+          Map<String, dynamic> userData = userDocSnapshot.data()!;
+
+          // Create a new Profile object including the extra fields.
+          // Adjust the constructor if you've made these fields optional or required.
+          profile = Profile(
+            fullName: profile.fullName,
+            profilePicUrl: profile.profilePicUrl,
+            about: profile.about,
+            education: profile.education,
+            skills: profile.skills,
+            experience: profile.experience,
+            projects: profile.projects,
+            achievements: profile.achievements,
+            rollNo: userData['rollNo'] ?? '',
+            email: userData['email'] ?? '',
+            phone: userData['phone'] ?? '',
+            linkedIn: userData['linkedIn'] ?? '',
+          );
+        }
+
+        tempAlumniList.add(profile);
+      }
+
+      alumniList = tempAlumniList;
     } catch (e) {
       debugPrint('Error fetching alumni: $e');
     } finally {

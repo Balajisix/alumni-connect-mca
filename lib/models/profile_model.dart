@@ -1,5 +1,3 @@
-// profile_model.dart
-
 class Profile {
   final String fullName;
   final String profilePicUrl;
@@ -10,6 +8,11 @@ class Profile {
   final List<Project> projects;
   final List<String> achievements;
 
+  final String rollNo;
+  final String email;
+  final String phone;
+  final String linkedIn;
+
   Profile({
     required this.fullName,
     required this.profilePicUrl,
@@ -19,6 +22,10 @@ class Profile {
     required this.experience,
     required this.projects,
     required this.achievements,
+    this.rollNo = '',
+    this.email = '',
+    this.phone = '',
+    this.linkedIn = ''
   });
 
   factory Profile.fromMap(Map<String, dynamic> map) {
@@ -42,6 +49,10 @@ class Profile {
       achievements: map['achievements'] != null
           ? List<String>.from(map['achievements'])
           : [],
+      rollNo: map['rollNo'] ?? '',      // New field
+      email: map['email'] ?? '',        // New field
+      phone: map['phone'] ?? '',        // New field
+      linkedIn: map['linkedIn'] ?? '',  // New field
     );
   }
 
@@ -55,6 +66,10 @@ class Profile {
       'experience': experience.map((e) => e.toMap()).toList(),
       'projects': projects.map((p) => p.toMap()).toList(),
       'achievements': achievements,
+      'rollNo': rollNo,      // New field
+      'email': email,        // New field
+      'phone': phone,        // New field
+      'linkedIn': linkedIn,  // New field
     };
   }
 }

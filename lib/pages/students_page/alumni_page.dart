@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alumniconnectmca/pages/students_page/alumni_details.dart';
 import 'package:alumniconnectmca/providers/students_provider/alumni_provider.dart';
-import 'package:alumniconnectmca/models/user_model.dart';
-
 import '../../models/profile_model.dart'; // Contains Profile model
 
 class AlumniPage extends StatefulWidget {
@@ -56,7 +54,7 @@ class _AlumniPageState extends State<AlumniPage> {
               backgroundColor: primaryBlue,
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
-                  'Alumni Network',
+                  'Alumni Connect',
                   style: TextStyle(
                     color: white,
                     fontWeight: FontWeight.bold,
@@ -357,13 +355,13 @@ class _AlumniPageState extends State<AlumniPage> {
             MaterialPageRoute(
               builder: (context) => AlumniDetailsPage(
                 alumni: {
-                  // 'rollNo': alumni.rollNo,
+                  'rollNo': alumni.rollNo,
                   'fullName': alumni.fullName,
                   'about': alumni.about ?? '',
                   'profilePicUrl': alumni.profilePicUrl ?? '',
-                  // 'email': alumni.email ?? '',
-                  // 'phone': alumni.phone ?? '',
-                  // 'linkedin': alumni.linkedIn ?? '',
+                  'email': alumni.email ?? '',
+                  'phone': alumni.phone ?? '',
+                  'linkedin': alumni.linkedIn ?? '',
                   'skills': alumni.skills ?? [],
                   'education': alumni.education ?? [],
                   'experience': alumni.experience ?? [],
@@ -453,13 +451,13 @@ class _AlumniPageState extends State<AlumniPage> {
                         MaterialPageRoute(
                           builder: (context) => AlumniDetailsPage(
                             alumni: {
-                              // 'rollNo': alumni.rollNo,
+                              'rollNo': alumni.rollNo,
                               'fullName': alumni.fullName,
                               'about': alumni.about ?? '',
                               'profilePicUrl': alumni.profilePicUrl ?? '',
-                              // 'email': alumni.email ?? '',
-                              // 'phone': alumni.phone ?? '',
-                              // 'linkedin': alumni.linkedIn ?? '',
+                              'email': alumni.email ?? '',
+                              'phone': alumni.phone ?? '',
+                              'linkedin': alumni.linkedIn ?? '',
                               'skills': alumni.skills ?? [],
                               'education': alumni.education ?? [],
                               'experience': alumni.experience ?? [],
