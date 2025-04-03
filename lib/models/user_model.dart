@@ -8,6 +8,7 @@ class UserModel {
   final String linkedIn;
   final String userType;
   final String password;
+  final String profilePicUrl;
 
   UserModel({
     this.uid,
@@ -18,7 +19,8 @@ class UserModel {
     required this.phone,
     required this.linkedIn,
     required this.userType,
-    required this.password
+    required this.password,
+    this.profilePicUrl = '',
   });
 
   Map<String, dynamic> toMap(){
@@ -32,6 +34,7 @@ class UserModel {
       'linkedIn': linkedIn,
       'userType': userType,
       'password' : password,
+      'profilePicUrl' : profilePicUrl
     };
   }
 
@@ -46,6 +49,7 @@ class UserModel {
       linkedIn: map['linkedIn'] ?? '',
       userType: map['userType'] ?? '',
       password: map['password'] ?? '',
+      profilePicUrl: map['profilePicUrl'] ?? '',
     );
   }
 }

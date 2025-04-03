@@ -8,30 +8,64 @@ class AlumniHomeProvider extends ChangeNotifier {
 
   String _fullName = "Alumni";
   String _profilePicUrl = "";
+  String _company = "";
+  String _role = "";
 
   String get fullName => _fullName;
   String get profilePicUrl => _profilePicUrl;
+  String get company => _company;
+  String get role => _role;
 
   AlumniHomeProvider() {
-    listenToAlumniDetails();
+    User? currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      _subscribeToProfileDetails(currentUser);
+    }
+
+    _auth.authStateChanges().listen((user) {
+      if (user != null) {
+        _subscribeToProfileDetails(user);
+      } else {
+        _fullName = "User";
+        _profilePicUrl = "";
+        _company = "";
+        _role = "";
+        notifyListeners();
+      }
+    });
   }
 
-  void listenToAlumniDetails() {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      // Using the 'alumni' collection instead of 'users'
-      _firestore.collection("alumni").doc(user.uid).snapshots().listen(
-            (alumniDoc) {
-          if (alumniDoc.exists) {
-            _fullName = "${alumniDoc['firstName']} ${alumniDoc['lastName']}";
-            _profilePicUrl = alumniDoc['profilePicUrl'] ?? "";
-            notifyListeners();
+  void _subscribeToProfileDetails(User user) {
+    _firestore.collection("profiles").doc(user.uid).snapshots().listen(
+          (profileDoc) {
+        if (profileDoc.exists && profileDoc.data() != null) {
+          final data = profileDoc.data()!;
+          // Use fullName if available, else fallback to firstName and lastName.
+          _fullName = data['fullName'] ??
+              "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}".trim();
+          _profilePicUrl = data['profilePicUrl'] ?? "";
+
+          // Extract experience information if available.
+          if (data['experience'] != null) {
+            final experiences = List<Map<String, dynamic>>.from(data['experience']);
+            if (experiences.isNotEmpty) {
+              final firstExp = experiences.first;
+              _company = firstExp['company'] ?? "";
+              _role = firstExp['role'] ?? "";
+            } else {
+              _company = "";
+              _role = "";
+            }
+          } else {
+            _company = "";
+            _role = "";
           }
-        },
-        onError: (error) {
-          print("Error listening to alumni details: $error");
-        },
-      );
-    }
+          notifyListeners();
+        }
+      },
+      onError: (error) {
+        print("Error listening to profile details: $error");
+      },
+    );
   }
 }

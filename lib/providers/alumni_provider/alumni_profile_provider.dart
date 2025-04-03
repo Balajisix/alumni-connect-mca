@@ -102,22 +102,17 @@ class ProfileProviderAlumni extends ChangeNotifier {
 
       // Listen to profile data changes for the logged in user in the "alumni-profile" collection.
       FirebaseFirestore.instance
-          .collection('alumni-profile')
+          .collection('alumni-profile') // or 'users' if that's your intended collection
           .doc(user.uid)
           .snapshots()
           .listen((docSnapshot) {
         if (!docSnapshot.exists) {
-          debugPrint("No profile document exists yet. Setting blank fields.");
+          // Document doesn't exist yet, so set blank data
           _setBlankFields();
         } else {
-          try {
-            final data = docSnapshot.data()!;
-            final profile = Profile.fromMap(data);
-            _populateControllers(profile);
-            debugPrint("Profile data loaded successfully.");
-          } catch (e) {
-            debugPrint("Error parsing profile data: $e");
-          }
+          final data = docSnapshot.data()!;
+          final profile = Profile.fromMap(data);
+          _populateControllers(profile);
         }
         isLoading = false;
         notifyListeners();
@@ -200,12 +195,17 @@ class ProfileProviderAlumni extends ChangeNotifier {
 
   /// Pick a new profile picture from the gallery.
   Future<void> pickProfileImage(BuildContext context) async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    // Pick and compress image: imageQuality reduces file size (0-100, lower means more compression).
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 50, // Adjust this value if needed.
+    );
     if (pickedFile != null) {
       final file = File(pickedFile.path);
       final int fileSize = await file.length();
-      // 1.5MB = 1572864 bytes
+      // 1.5MB = 1572864 bytes.
       if (fileSize > 1572864) {
+        // Show error message if image is too large.
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Image size must be less than 1.5MB.'),
@@ -214,8 +214,8 @@ class ProfileProviderAlumni extends ChangeNotifier {
         );
         return;
       }
+      // If the image is valid, set profileImage and update UI.
       profileImage = file;
-      debugPrint("Profile image selected: ${file.path}");
       notifyListeners();
     }
   }
@@ -223,17 +223,12 @@ class ProfileProviderAlumni extends ChangeNotifier {
   /// Uploads the profile picture to Firebase Storage and returns its download URL.
   Future<String> uploadProfilePicture(File file) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception("No user is logged in.");
-    }
     final ref = FirebaseStorage.instance
         .ref()
         .child('profile_pictures')
-        .child('${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+        .child('${user!.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
     await ref.putFile(file);
-    final downloadUrl = await ref.getDownloadURL();
-    debugPrint("Uploaded profile picture URL: $downloadUrl");
-    return downloadUrl;
+    return await ref.getDownloadURL();
   }
 
   /// Save the profile data to Firestore ("alumni-profile" collection).
@@ -243,78 +238,69 @@ class ProfileProviderAlumni extends ChangeNotifier {
       notifyListeners();
 
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        debugPrint("Error: No user is logged in while saving profile.");
-        return;
-      }
+      if (user != null) {
+        // Upload new profile picture if available.
+        if (profileImage != null) {
+          String downloadUrl = await uploadProfilePicture(profileImage!);
+          profilePicController.text = downloadUrl;
+        }
 
-      // Upload new profile picture if one was selected.
-      if (profileImage != null) {
-        String downloadUrl = await uploadProfilePicture(profileImage!);
-        profilePicController.text = downloadUrl;
-      }
+        // Gather dynamic experiences.
+        List<Experience> experiences = experienceFields.map((field) {
+          return Experience(
+            company: field.companyController.text,
+            role: field.roleController.text,
+            duration: field.durationController.text,
+            description: field.descriptionController.text,
+          );
+        }).toList();
 
-      // Gather dynamic experiences.
-      List<Experience> experiences = experienceFields.map((field) {
-        return Experience(
-          company: field.companyController.text,
-          role: field.roleController.text,
-          duration: field.durationController.text,
-          description: field.descriptionController.text,
-        );
-      }).toList();
+        // Gather dynamic projects.
+        List<Project> projects = projectFields.map((field) {
+          return Project(
+            title: field.titleController.text,
+            description: field.descriptionController.text,
+            technologies: field.technologiesController.text
+                .split(',')
+                .map((s) => s.trim())
+                .toList(),
+            link: field.linkController.text,
+          );
+        }).toList();
 
-      // Gather dynamic projects.
-      List<Project> projects = projectFields.map((field) {
-        return Project(
-          title: field.titleController.text,
-          description: field.descriptionController.text,
-          technologies: field.technologiesController.text
+        final profile = Profile(
+          fullName: fullNameController.text,
+          profilePicUrl: profilePicController.text,
+          about: aboutController.text,
+          education: [
+            Education(
+              institution: institutionController.text,
+              degree: degreeController.text,
+              fieldOfStudy: fieldOfStudyController.text,
+              startYear: startYearController.text,
+              endYear: endYearController.text,
+            )
+          ],
+          skills: skillsController.text
               .split(',')
               .map((s) => s.trim())
               .toList(),
-          link: field.linkController.text,
+          experience: experiences,
+          projects: projects,
+          achievements: achievementsController.text
+              .split(',')
+              .map((s) => s.trim())
+              .toList(),
         );
-      }).toList();
 
-      final profile = Profile(
-        fullName: fullNameController.text,
-        profilePicUrl: profilePicController.text,
-        about: aboutController.text,
-        education: [
-          Education(
-            institution: institutionController.text,
-            degree: degreeController.text,
-            fieldOfStudy: fieldOfStudyController.text,
-            startYear: startYearController.text,
-            endYear: endYearController.text,
-          )
-        ],
-        skills: skillsController.text
-            .split(',')
-            .map((s) => s.trim())
-            .toList(),
-        experience: experiences,
-        projects: projects,
-        achievements: achievementsController.text
-            .split(',')
-            .map((s) => s.trim())
-            .toList(),
-      );
-
-      final profileData = profile.toMap();
-      debugPrint("Saving profile data for user ${user.uid}: $profileData");
-
-      // Save the profile data in the "alumni-profile" collection.
-      await FirebaseFirestore.instance
-          .collection('alumni-profile')
-          .doc(user.uid)
-          .set(profileData, SetOptions(merge: true));
-
-      debugPrint("Profile saved successfully.");
-    } catch (e, stacktrace) {
+        // Use the user's UID for the doc
+        await FirebaseFirestore.instance
+            .collection('alumni-profile')
+            .doc(user.uid)
+            .set(profile.toMap(), SetOptions(merge: true));
+      }
+    } catch (e) {
       debugPrint("Error saving profile: $e");
-      debugPrint("$stacktrace");
     } finally {
       isEditing = false;
       isLoading = false;

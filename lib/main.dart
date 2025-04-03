@@ -1,6 +1,7 @@
 import 'package:alumniconnectmca/auth_state/auth_checker.dart';
 import 'package:alumniconnectmca/pages/alumni_page/alumni_home.dart';
 import 'package:alumniconnectmca/pages/alumni_page/alumni_profile.dart';
+import 'package:alumniconnectmca/pages/alumni_page/student_page.dart';
 import 'package:alumniconnectmca/pages/students_page/alumni_page.dart';
 import 'package:alumniconnectmca/pages/students_page/home_page.dart';
 import 'package:alumniconnectmca/pages/students_page/profile_page.dart';
@@ -11,6 +12,7 @@ import 'package:alumniconnectmca/providers/students_provider/home_provider.dart'
 import 'package:alumniconnectmca/providers/students_provider/profile_provider.dart';
 import 'package:alumniconnectmca/providers/signup_providers.dart';
 import 'package:alumniconnectmca/providers/students_provider/alumni_provider.dart';
+import 'package:alumniconnectmca/providers/alumni_provider/student_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -28,7 +30,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ProfileProvider()),        // Student ProfileProvider
         ChangeNotifierProvider(create: (_) => AlumniHomeProvider()),     // Alumni HomeProvider
         ChangeNotifierProvider(create: (_) => ProfileProviderAlumni()),
-        ChangeNotifierProvider(create: (_) => AlumniProvider())// Alumni ProfileProvider
+        ChangeNotifierProvider(create: (_) => AlumniProvider()),// Alumni ProfileProvider
+        ChangeNotifierProvider(create: (_) => StudentProvider())
       ],
       child: const MyApp(),
     ),
@@ -59,6 +62,7 @@ class MyApp extends StatelessWidget {
         // Alumni routes
         '/alumniHome': (context) => AlumniHomePage(),
         '/alumniProfile': (context) => ProfilePageAlumni(),
+        '/findStudents' : (context) => StudentPage(),
         // You can add more routes (like chat, events posting, etc.) here.
       },
     );
