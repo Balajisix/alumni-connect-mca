@@ -26,7 +26,7 @@ class AlumniHomeProvider extends ChangeNotifier {
       if (user != null) {
         _subscribeToProfileDetails(user);
       } else {
-        _fullName = "User";
+        _fullName = "Alumni";
         _profilePicUrl = "";
         _company = "";
         _role = "";
@@ -36,7 +36,7 @@ class AlumniHomeProvider extends ChangeNotifier {
   }
 
   void _subscribeToProfileDetails(User user) {
-    _firestore.collection("profiles").doc(user.uid).snapshots().listen(
+    _firestore.collection("users").doc(user.uid).snapshots().listen(
           (profileDoc) {
         if (profileDoc.exists && profileDoc.data() != null) {
           final data = profileDoc.data()!;

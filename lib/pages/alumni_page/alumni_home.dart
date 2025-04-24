@@ -1,8 +1,9 @@
-import 'package:alumniconnectmca/widgets/drawer_page.dart';
-import 'package:alumniconnectmca/pages/alumni_page/student_page.dart';  // Changed import
+import 'package:alumniconnectmca/widgets/alumni_drawer.dart';
+import 'package:alumniconnectmca/pages/alumni_page/student_page.dart';
+import 'package:alumniconnectmca/pages/alumni_page/event_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:alumniconnectmca/providers/alumni_provider/alumni_home_provider.dart';  // Changed provider path
+import 'package:alumniconnectmca/providers/alumni_provider/alumni_home_provider.dart';
 
 class AlumniHomePage extends StatelessWidget {  // Changed class name
   AlumniHomePage({super.key});
@@ -104,21 +105,6 @@ class AlumniHomePage extends StatelessWidget {  // Changed class name
                                 ),
                               ),
                               SizedBox(width: 5),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  "Alumni",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                           SizedBox(height: 5),
@@ -188,7 +174,18 @@ class AlumniHomePage extends StatelessWidget {  // Changed class name
                               );
                             }
                         ),
-                        _quickAccessButton(context, Icons.event, "Events"),
+                        _quickAccessButton(
+                            context,
+                            Icons.event,
+                            "Events",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const AlumniEventListPage()),
+                              );
+                            }
+                        ),
                         _quickAccessButton(context, Icons.work, "Post Job"),
                         _quickAccessButton(context, Icons.message, "Mentoring"),
                         _quickAccessButton(context, Icons.people, "Network"),

@@ -141,7 +141,14 @@ class HomePage extends StatelessWidget {
                               );
                             }
                         ),
-                        _quickAccessButton(context, Icons.event, "Events"),
+                        _quickAccessButton(
+                            context,
+                            Icons.event,
+                            "Events",
+                            onTap: () {
+                              Navigator.pushNamed(context, '/student/events');
+                            }
+                        ),
                         _quickAccessButton(context, Icons.work, "Jobs"),
                         _quickAccessButton(context, Icons.message, "Chat"),
                       ],
