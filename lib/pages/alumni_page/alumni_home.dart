@@ -4,6 +4,8 @@ import 'package:alumniconnectmca/pages/alumni_page/event_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alumniconnectmca/providers/alumni_provider/alumni_home_provider.dart';
+import 'package:alumniconnectmca/providers/chat_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AlumniHomePage extends StatelessWidget {  // Changed class name
   AlumniHomePage({super.key});
@@ -189,6 +191,7 @@ class AlumniHomePage extends StatelessWidget {  // Changed class name
                         _quickAccessButton(context, Icons.work, "Post Job"),
                         _quickAccessButton(context, Icons.message, "Mentoring"),
                         _quickAccessButton(context, Icons.people, "Network"),
+                        _quickAccessButton(context, Icons.chat, "Chat"),
                       ],
                     ),
                   ),
@@ -277,7 +280,16 @@ class AlumniHomePage extends StatelessWidget {  // Changed class name
       width: 100,
       margin: EdgeInsets.only(right: 12),
       child: InkWell(
-        onTap: onTap,
+        onTap: label == "Chat" 
+            ? () {
+                final currentUser = FirebaseAuth.instance.currentUser;
+                if (currentUser != null) {
+                  Provider.of<ChatProvider>(context, listen: false)
+                      .fetchConversations(currentUser.uid, 'alumni');
+                  Navigator.pushNamed(context, '/alumni/chats');
+                }
+              }
+            : onTap,
         child: Column(
           children: [
             Container(

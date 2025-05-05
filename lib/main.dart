@@ -1,8 +1,10 @@
 import 'package:alumniconnectmca/auth_state/auth_checker.dart';
-import 'package:alumniconnectmca/pages/alumni_page/alumni_home_page.dart';
+import 'package:alumniconnectmca/pages/alumni_page/alumni_home.dart';
 import 'package:alumniconnectmca/pages/alumni_page/alumni_profile.dart';
 import 'package:alumniconnectmca/pages/alumni_page/student_page.dart';
+import 'package:alumniconnectmca/pages/alumni_page/student_details.dart';
 import 'package:alumniconnectmca/pages/students_page/alumni_page.dart';
+import 'package:alumniconnectmca/pages/students_page/alumni_details.dart';
 import 'package:alumniconnectmca/pages/students_page/home_page.dart';
 import 'package:alumniconnectmca/pages/students_page/profile_page.dart';
 import 'package:alumniconnectmca/pages/students_page/event_list_page.dart';
@@ -21,33 +23,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'providers/chat_provider.dart';
-import 'pages/students_page/student_home_page.dart';
 import 'pages/students_page/chat_list_page.dart';
 import 'pages/alumni_page/event_list_page.dart';
 import 'pages/alumni_page/chat_list_page.dart';
 import 'pages/students_page/chat_detail_page.dart';
 import 'models/chat_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'providers/auth_provider.dart';
+import 'providers/notification_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => SignupProvider()),
-        ChangeNotifierProvider(create: (_) => HomeProvider()),           // Student HomeProvider
-        ChangeNotifierProvider(create: (_) => ProfileProvider()),        // Student ProfileProvider
-        ChangeNotifierProvider(create: (_) => EventProvider()),          // Student EventProvider
-        ChangeNotifierProvider(create: (_) => AlumniHomeProvider()),     // Alumni HomeProvider
-        ChangeNotifierProvider(create: (_) => ProfileProviderAlumni()),
-        ChangeNotifierProvider(create: (_) => AlumniProvider()),         // Alumni ProfileProvider
-        ChangeNotifierProvider(create: (_) => StudentProvider()),
-        ChangeNotifierProvider(create: (_) => ChatProvider()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+  await Firebase.initializeApp();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -55,45 +43,102 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Alumni Connect',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CustomAuthProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => SignupProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => EventProvider()),
+        ChangeNotifierProvider(create: (_) => AlumniHomeProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProviderAlumni()),
+        ChangeNotifierProvider(create: (_) => AlumniProvider()),
+        ChangeNotifierProvider(create: (_) => StudentProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Alumni Connect',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const AuthWrapper(),
+        routes: {
+          '/login': (context) => LoginPage(),
+          // Student routes
+          '/home': (context) => HomePage(),
+          '/studentProfile': (context) => ProfilePage(),
+          '/findAlumni': (context) => AlumniPage(),
+          '/student/events': (context) => const StudentEventListPage(),
+          '/student/event/post': (context) => EventPostPage(),
+          '/student/chats': (context) => const StudentChatListPage(),
+          '/student/alumni/details': (context) {
+            final alumni = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+            return AlumniDetailPage(alumni: alumni);
+          },
+          // Alumni routes
+          '/alumniHome': (context) => AlumniHomePage(),
+          '/alumniProfile': (context) => ProfilePageAlumni(),
+          '/findStudents': (context) => StudentPage(),
+          '/alumni/events': (context) => const AlumniEventListPage(),
+          '/alumni/chats': (context) => const AlumniChatListPage(),
+          '/alumni/student/details': (context) {
+            final student = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+            return StudentDetailPage(student: student);
+          },
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name == '/student/chat/detail' || settings.name == '/alumni/chat/detail') {
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => ChatDetailPage(
+                conversation: args['conversation'] as ChatConversation,
+                currentUserId: args['currentUserId'] as String,
+                currentUserName: args['currentUserName'] as String,
+                currentUserType: args['currentUserType'] as String,
+              ),
+            );
+          }
+          return null;
+        },
       ),
-      // Let AuthChecker decide which home page to display.
-      home: AuthChecker(),
-      routes: {
-        '/login': (context) => LoginPage(),
-        // Student routes
-        '/studentHome': (context) => const StudentHomePage(),
-        '/studentProfile': (context) => ProfilePage(),
-        '/findAlumni': (context) => AlumniPage(),
-        '/student/events': (context) => const StudentEventListPage(),
-        '/student/event/post': (context) => EventPostPage(),
-        '/student/chats': (context) => const StudentChatListPage(),
-        // Alumni routes
-        '/alumniHome': (context) => const AlumniHomePage(),
-        '/alumniProfile': (context) => ProfilePageAlumni(),
-        '/findStudents': (context) => StudentPage(),
-        '/alumni/events': (context) => const AlumniEventListPage(),
-        '/alumni/chats': (context) => const AlumniChatListPage(),
-      },
-      onGenerateRoute: (settings) {
-        if (settings.name == '/student/chat/detail' || settings.name == '/alumni/chat/detail') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => ChatDetailPage(
-              conversation: args['conversation'] as ChatConversation,
-              currentUserId: args['currentUserId'] as String,
-              currentUserName: args['currentUserName'] as String,
-              currentUserType: args['currentUserType'] as String,
-            ),
-          );
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<CustomAuthProvider>(context);
+    final notificationProvider = Provider.of<NotificationProvider>(context);
+
+    return StreamBuilder<User?>(
+      stream: authProvider.authStateChanges,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
         }
-        return null;
+
+        if (snapshot.hasData) {
+          // Initialize notifications when user is logged in
+          if (!notificationProvider.isInitialized) {
+            notificationProvider.initialize();
+          }
+
+          final user = snapshot.data!;
+          final userType = user.email?.endsWith('@alumni.com') ?? false ? 'alumni' : 'student';
+
+          return userType == 'student'
+              ? HomePage()
+              : AlumniHomePage();
+        }
+
+        return LoginPage();
       },
     );
   }

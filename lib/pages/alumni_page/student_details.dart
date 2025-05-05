@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:alumniconnectmca/providers/chat_provider.dart';
+import 'package:alumniconnectmca/models/chat_model.dart';
 
 class StudentDetailPage extends StatelessWidget {
   final Map<String, dynamic> student;
@@ -79,8 +83,42 @@ class StudentDetailPage extends StatelessWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.message),
-                onPressed: () {
-                  // Message functionality
+                onPressed: () async {
+                  final currentUser = FirebaseAuth.instance.currentUser;
+                  if (currentUser != null) {
+                    // Create a new conversation
+                    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+                    
+                    // Create conversation
+                    final conversationId = await chatProvider.createConversation(
+                      studentId: student['rollNo'] ?? currentUser.uid,
+                      studentName: student['fullName'] ?? 'Student',
+                      alumniId: currentUser.uid,
+                      alumniName: 'You',
+                    );
+
+                    // Navigate to chat
+                    Navigator.pushNamed(
+                      context,
+                      '/alumni/chat/detail',
+                      arguments: {
+                        'conversation': ChatConversation(
+                          id: conversationId,
+                          studentId: student['rollNo'] ?? currentUser.uid,
+                          studentName: student['fullName'] ?? 'Student',
+                          alumniId: currentUser.uid,
+                          alumniName: 'You',
+                          messages: [],
+                          lastMessageTime: DateTime.now(),
+                          lastMessage: '',
+                          hasUnreadMessages: false,
+                        ),
+                        'currentUserId': currentUser.uid,
+                        'currentUserName': 'You',
+                        'currentUserType': 'alumni'
+                      }
+                    );
+                  }
                 },
               ),
             ],

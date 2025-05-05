@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:alumniconnectmca/providers/chat_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class StudentHomePage extends StatelessWidget {
   const StudentHomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Student Home'),
@@ -38,7 +43,11 @@ class StudentHomePage extends StatelessWidget {
               title: const Text('Messages'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/student/chats');
+                if (currentUser != null) {
+                  Provider.of<ChatProvider>(context, listen: false)
+                      .fetchConversations(currentUser.uid, 'student');
+                  Navigator.pushNamed(context, '/student/chats');
+                }
               },
             ),
             ListTile(
@@ -70,7 +79,11 @@ class StudentHomePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/student/chats');
+          if (currentUser != null) {
+            Provider.of<ChatProvider>(context, listen: false)
+                .fetchConversations(currentUser.uid, 'student');
+            Navigator.pushNamed(context, '/student/chats');
+          }
         },
         backgroundColor: Colors.green,
         child: const Icon(Icons.message, color: Colors.white),
@@ -92,6 +105,13 @@ class StudentHomePage extends StatelessWidget {
             label: 'Messages',
             route: '/student/chats',
             color: Colors.green,
+            onTap: () {
+              if (currentUser != null) {
+                Provider.of<ChatProvider>(context, listen: false)
+                    .fetchConversations(currentUser.uid, 'student');
+                Navigator.pushNamed(context, '/student/chats');
+              }
+            },
           ),
         ],
       ),
@@ -104,18 +124,20 @@ class _QuickAccessItem extends StatelessWidget {
   final String label;
   final String route;
   final Color color;
+  final VoidCallback? onTap;
 
   const _QuickAccessItem({
     required this.icon,
     required this.label,
     required this.route,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, route),
+      onTap: onTap ?? () => Navigator.pushNamed(context, route),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:alumniconnectmca/pages/students_page/alumni_details.dart';
 import 'package:alumniconnectmca/providers/students_provider/alumni_provider.dart';
 import '../../models/profile_model.dart'; // Contains Profile model
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AlumniPage extends StatefulWidget {
   const AlumniPage({Key? key}) : super(key: key);
@@ -353,7 +355,7 @@ class _AlumniPageState extends State<AlumniPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AlumniDetailsPage(
+              builder: (context) => AlumniDetailPage(
                 alumni: {
                   'rollNo': alumni.rollNo,
                   'fullName': alumni.fullName,
@@ -449,7 +451,7 @@ class _AlumniPageState extends State<AlumniPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AlumniDetailsPage(
+                          builder: (context) => AlumniDetailPage(
                             alumni: {
                               'rollNo': alumni.rollNo,
                               'fullName': alumni.fullName,

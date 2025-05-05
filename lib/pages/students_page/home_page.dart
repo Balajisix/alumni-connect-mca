@@ -3,6 +3,8 @@ import 'package:alumniconnectmca/pages/students_page/alumni_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alumniconnectmca/providers/students_provider/home_provider.dart';
+import 'package:alumniconnectmca/providers/chat_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -193,7 +195,16 @@ class HomePage extends StatelessWidget {
       width: 100,
       margin: EdgeInsets.only(right: 12),
       child: InkWell(
-        onTap: onTap,
+        onTap: label == "Chat" 
+            ? () {
+                final currentUser = FirebaseAuth.instance.currentUser;
+                if (currentUser != null) {
+                  Provider.of<ChatProvider>(context, listen: false)
+                      .fetchConversations(currentUser.uid, 'student');
+                  Navigator.pushNamed(context, '/student/chats');
+                }
+              }
+            : onTap,
         child: Column(
           children: [
             Container(

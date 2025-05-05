@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import '../../providers/chat_provider.dart';
 import '../../models/chat_model.dart';
 
@@ -30,10 +31,25 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final Color darkBlue = Color(0xFF0D47A1);
   final Color pureWhite = Colors.white;
   final Color offWhite = Color(0xFFF8F9FA);
+  bool _isSending = false;
+  StreamSubscription<ChatConversation>? _conversationSubscription;
+  ChatConversation? _currentConversation;
 
   @override
   void initState() {
     super.initState();
+    _currentConversation = widget.conversation;
+    
+    // Set up real-time listener for conversation updates
+    _conversationSubscription = Provider.of<ChatProvider>(context, listen: false)
+        .listenToConversation(widget.conversation.id)
+        .listen((conversation) {
+      setState(() {
+        _currentConversation = conversation;
+      });
+      _scrollToBottom();
+    });
+
     // Mark messages as read when opening the chat
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ChatProvider>(context, listen: false)
@@ -45,22 +61,39 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _conversationSubscription?.cancel();
     super.dispose();
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
-    Provider.of<ChatProvider>(context, listen: false).sendMessage(
-      conversationId: widget.conversation.id,
-      senderId: widget.currentUserId,
-      senderName: widget.currentUserName,
-      senderType: widget.currentUserType,
-      content: _messageController.text.trim(),
-    );
+    setState(() {
+      _isSending = true;
+    });
 
-    _messageController.clear();
-    _scrollToBottom();
+    try {
+      await Provider.of<ChatProvider>(context, listen: false).sendMessage(
+        conversationId: widget.conversation.id,
+        senderId: widget.currentUserId,
+        senderName: widget.currentUserName,
+        senderType: widget.currentUserType,
+        content: _messageController.text.trim(),
+      );
+
+      _messageController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send message: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSending = false;
+      });
+    }
   }
 
   void _scrollToBottom() {
@@ -75,127 +108,45 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final conversation = _currentConversation ?? widget.conversation;
+    
     return Scaffold(
       appBar: AppBar(
         backgroundColor: primaryBlue,
         elevation: 0,
         title: Text(
-          widget.currentUserType == 'student'
-              ? widget.conversation.alumniName
-              : widget.conversation.studentName,
-          style: const TextStyle(color: Colors.white),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          widget.currentUserType == 'student' 
+              ? conversation.alumniName 
+              : conversation.studentName,
         ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              primaryBlue.withOpacity(0.1),
-              offWhite,
-            ],
-          ),
-        ),
-        child: Column(
-          children: [
-            // Messages
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: widget.conversation.messages.length,
-                itemBuilder: (context, index) {
-                  final message = widget.conversation.messages[index];
-                  final isMe = message.senderId == widget.currentUserId;
-
-                  return _MessageBubble(
-                    message: message,
-                    isMe: isMe,
-                  );
-                },
-              ),
-            ),
-
-            // Message Input
-            Container(
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: pureWhite,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: offWhite,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                      ),
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: primaryBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      onPressed: _sendMessage,
-                    ),
-                  ),
-                ],
-              ),
+              itemCount: conversation.messages.length,
+              itemBuilder: (context, index) {
+                final message = conversation.messages[index];
+                final isMe = message.senderId == widget.currentUserId;
+                
+                return _buildMessageBubble(message, isMe);
+              },
             ),
-          ],
-        ),
+          ),
+          _buildMessageInput(),
+        ],
       ),
     );
   }
-}
 
-class _MessageBubble extends StatelessWidget {
-  final ChatMessage message;
-  final bool isMe;
-
-  const _MessageBubble({
-    required this.message,
-    required this.isMe,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final Color primaryBlue = Color(0xFF1E88E5);
-    final Color lightBlue = Color(0xFF64B5F6);
-    final Color darkBlue = Color(0xFF0D47A1);
-    final Color pureWhite = Colors.white;
-
+  Widget _buildMessageBubble(ChatMessage message, bool isMe) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
             Container(
@@ -280,6 +231,65 @@ class _MessageBubble extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageInput() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: pureWhite,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              decoration: InputDecoration(
+                hintText: 'Type a message...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: offWhite,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+              ),
+              onSubmitted: (_) => _sendMessage(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: _isSending ? Colors.grey : primaryBlue,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: _isSending
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.send, color: Colors.white),
+              onPressed: _isSending ? null : _sendMessage,
+            ),
+          ),
         ],
       ),
     );

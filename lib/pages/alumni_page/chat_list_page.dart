@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../providers/chat_provider.dart';
 import '../students_page/chat_detail_page.dart';
 import 'package:alumniconnectmca/models/chat_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AlumniChatListPage extends StatefulWidget {
   const AlumniChatListPage({Key? key}) : super(key: key);
@@ -18,20 +19,32 @@ class _AlumniChatListPageState extends State<AlumniChatListPage> {
   final Color darkBlue = Color(0xFF0D47A1);
   final Color pureWhite = Colors.white;
   final Color offWhite = Color(0xFFF8F9FA);
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
     // Fetch conversations when the page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // TODO: Replace with actual alumni ID
-      Provider.of<ChatProvider>(context, listen: false)
-          .fetchConversations('alumni_id', 'alumni');
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        Provider.of<ChatProvider>(context, listen: false)
+            .fetchConversations(currentUser.uid, 'alumni');
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Please sign in to view chats'),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -146,8 +159,8 @@ class _AlumniChatListPageState extends State<AlumniChatListPage> {
                             '/alumni/chat/detail',
                             arguments: {
                               'conversation': conversation,
-                              'currentUserId': 'alumni_id', // TODO: Replace with actual alumni ID
-                              'currentUserName': 'Alumni Name', // TODO: Replace with actual alumni name
+                              'currentUserId': currentUser.uid,
+                              'currentUserName': currentUser.displayName ?? 'Alumni',
                               'currentUserType': 'alumni',
                             },
                           );

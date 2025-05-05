@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:alumniconnectmca/providers/chat_provider.dart';
+import 'package:alumniconnectmca/models/chat_model.dart';
 
-class AlumniDetailsPage extends StatelessWidget {
+class AlumniDetailPage extends StatelessWidget {
   final Map<String, dynamic> alumni;
-  const AlumniDetailsPage({Key? key, required this.alumni}) : super(key: key);
+  const AlumniDetailPage({Key? key, required this.alumni}) : super(key: key);
 
   // Define theme colors for consistency
   static const Color primaryBlue = Color(0xFF1E88E5);
@@ -79,8 +83,42 @@ class AlumniDetailsPage extends StatelessWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.message),
-                onPressed: () {
-                  // Message functionality
+                onPressed: () async {
+                  final currentUser = FirebaseAuth.instance.currentUser;
+                  if (currentUser != null) {
+                    // Create a new conversation
+                    final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+                    
+                    // Create conversation
+                    final conversationId = await chatProvider.createConversation(
+                      studentId: currentUser.uid,
+                      studentName: 'You',
+                      alumniId: alumni['rollNo'] ?? currentUser.uid,
+                      alumniName: alumni['fullName'] ?? 'Alumni',
+                    );
+
+                    // Navigate to chat
+                    Navigator.pushNamed(
+                      context,
+                      '/student/chat/detail',
+                      arguments: {
+                        'conversation': ChatConversation(
+                          id: conversationId,
+                          studentId: currentUser.uid,
+                          studentName: 'You',
+                          alumniId: alumni['rollNo'] ?? currentUser.uid,
+                          alumniName: alumni['fullName'] ?? 'Alumni',
+                          messages: [],
+                          lastMessageTime: DateTime.now(),
+                          lastMessage: '',
+                          hasUnreadMessages: false,
+                        ),
+                        'currentUserId': currentUser.uid,
+                        'currentUserName': 'You',
+                        'currentUserType': 'student'
+                      }
+                    );
+                  }
                 },
               ),
             ],
@@ -123,7 +161,34 @@ class AlumniDetailsPage extends StatelessWidget {
                   ),
                 ),
 
-                // Skills Section with improved styling
+                // Current Position
+                if (alumni['currentPosition'] != null)
+                  _buildInfoCard(
+                    title: "Current Position",
+                    icon: Icons.work,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            alumni['currentPosition'],
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (alumni['company'] != null)
+                            Text(
+                              alumni['company'],
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Skills Section
                 if (alumni['skills'] != null && (alumni['skills'] as List).isNotEmpty)
                   _buildInfoCard(
                     title: "Skills",
@@ -151,65 +216,15 @@ class AlumniDetailsPage extends StatelessWidget {
                     ),
                   ),
 
-                // Education Section
-                if (alumni['education'] != null && (alumni['education'] as List).isNotEmpty)
-                  _buildInfoCard(
-                    title: "Education",
-                    icon: Icons.school,
-                    child: Column(
-                      children: (alumni['education'] as List)
-                          .map((edu) => _educationTile(edu))
-                          .toList(),
-                    ),
-                  ),
-
                 // Experience Section
                 if (alumni['experience'] != null && (alumni['experience'] as List).isNotEmpty)
                   _buildInfoCard(
                     title: "Experience",
-                    icon: Icons.work,
+                    icon: Icons.work_history,
                     child: Column(
                       children: (alumni['experience'] as List)
                           .map((exp) => _experienceTile(exp))
                           .toList(),
-                    ),
-                  ),
-
-                // Projects Section
-                if (alumni['projects'] != null && (alumni['projects'] as List).isNotEmpty)
-                  _buildInfoCard(
-                    title: "Projects",
-                    icon: Icons.code,
-                    child: Column(
-                      children: (alumni['projects'] as List)
-                          .map((project) => _projectTile(project))
-                          .toList(),
-                    ),
-                  ),
-
-                // Achievements Section
-                if (alumni['achievements'] != null && (alumni['achievements'] as List).isNotEmpty)
-                  _buildInfoCard(
-                    title: "Achievements",
-                    icon: Icons.emoji_events,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: (alumni['achievements'] as List).map((achievement) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.star, size: 16, color: primaryBlue),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(achievement)),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
                     ),
                   ),
 
@@ -218,13 +233,6 @@ class AlumniDetailsPage extends StatelessWidget {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: primaryBlue,
-        child: const Icon(Icons.connect_without_contact),
-        onPressed: () {
-          // Connect functionality
-        },
       ),
     );
   }
@@ -310,64 +318,6 @@ class AlumniDetailsPage extends StatelessWidget {
     );
   }
 
-  // Education Tile
-  Widget _educationTile(dynamic edu) {
-    Map<String, dynamic> eduMap;
-    if (edu is Map<String, dynamic>) {
-      eduMap = edu;
-    } else {
-      eduMap = edu.toMap();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: lightBlue,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.school, color: primaryBlue),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "${eduMap['degree']} in ${eduMap['fieldOfStudy']}",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  eduMap['institution'],
-                  style: const TextStyle(fontSize: 15),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${eduMap['startYear']} - ${eduMap['endYear']}",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Experience Tile
   Widget _experienceTile(dynamic exp) {
     Map<String, dynamic> expMap;
@@ -422,87 +372,6 @@ class AlumniDetailsPage extends StatelessWidget {
                 Text(
                   expMap['description'],
                   style: const TextStyle(height: 1.4),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Project Tile
-  Widget _projectTile(dynamic project) {
-    Map<String, dynamic> projMap;
-    if (project is Map<String, dynamic>) {
-      projMap = project;
-    } else {
-      projMap = project.toMap();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: lightBlue,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.code, color: primaryBlue),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  projMap['title'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              if (projMap['link'] != null)
-                IconButton(
-                  icon: const Icon(Icons.open_in_new, color: primaryBlue),
-                  onPressed: () async {
-                    if (await canLaunch(projMap['link'])) {
-                      await launch(projMap['link']);
-                    }
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 48.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(projMap['description']),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: (projMap['technologies'] as List).map((tech) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: lightBlue.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        tech,
-                        style: TextStyle(fontSize: 12, color: darkBlue),
-                      ),
-                    );
-                  }).toList(),
                 ),
               ],
             ),
